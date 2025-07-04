@@ -1,0 +1,258 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Microsoft Learn MCP Connector",
+    "description": "Connecteur pour rechercher dans la documentation Microsoft Learn via MCP (Model Context Protocol)",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Microsoft Learn MCP Proxy",
+      "email": "support@example.com"
+    }
+  },
+  "host": "mcp-proxy.mangosea-288534fa.francecentral.azurecontainerapps.io",
+  "basePath": "/",
+  "schemes": ["https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Utility"],
+        "summary": "Health Check",
+        "description": "Vérifie que le service fonctionne correctement",
+        "operationId": "HealthCheck",
+        "responses": {
+          "200": {
+            "description": "Service en fonctionnement",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "description": "Statut du service"
+                },
+                "service": {
+                  "type": "string",
+                  "description": "Nom du service"
+                },
+                "version": {
+                  "type": "string",
+                  "description": "Version du service"
+                },
+                "timestamp": {
+                  "type": "string",
+                  "description": "Horodatage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search": {
+      "post": {
+        "tags": ["Documentation"],
+        "summary": "Rechercher dans Microsoft Learn",
+        "description": "Recherche des documents dans la documentation Microsoft Learn",
+        "operationId": "SearchDocumentation",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "question": {
+                  "type": "string",
+                  "description": "Question ou mots-clés à rechercher",
+                  "example": "How to create Azure Functions"
+                }
+              },
+              "required": ["question"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Résultats de recherche trouvés",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "text": {
+                            "type": "string",
+                            "description": "JSON stringifié contenant les résultats"
+                          }
+                        }
+                      }
+                    },
+                    "isError": {
+                      "type": "boolean",
+                      "description": "Indique si une erreur s'est produite"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête invalide"
+          },
+          "500": {
+            "description": "Erreur serveur"
+          }
+        }
+      }
+    },
+    "/tools": {
+      "get": {
+        "tags": ["MCP"],
+        "summary": "Lister les outils MCP disponibles",
+        "description": "Récupère la liste des outils MCP disponibles",
+        "operationId": "ListMCPTools",
+        "responses": {
+          "200": {
+            "description": "Liste des outils MCP",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "object",
+                  "properties": {
+                    "tools": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "description": "Nom de l'outil"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "Description de l'outil"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mcp": {
+      "post": {
+        "tags": ["MCP"],
+        "summary": "Appel MCP direct",
+        "description": "Effectue un appel direct au protocole MCP Microsoft Learn",
+        "operationId": "DirectMCPCall",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "jsonrpc": {
+                  "type": "string",
+                  "description": "Version JSON-RPC",
+                  "example": "2.0"
+                },
+                "id": {
+                  "type": "number",
+                  "description": "ID unique de la requête",
+                  "example": 1
+                },
+                "method": {
+                  "type": "string",
+                  "description": "Méthode MCP à appeler",
+                  "example": "tools/call"
+                },
+                "params": {
+                  "type": "object",
+                  "description": "Paramètres de la méthode",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Nom de l'outil",
+                      "example": "microsoft_docs_search"
+                    },
+                    "arguments": {
+                      "type": "object",
+                      "description": "Arguments de l'outil",
+                      "properties": {
+                        "question": {
+                          "type": "string",
+                          "description": "Question à rechercher",
+                          "example": "Azure Container Apps deployment"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "required": ["jsonrpc", "id", "method"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Réponse MCP",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "jsonrpc": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "number"
+                },
+                "result": {
+                  "type": "object",
+                  "description": "Résultat de l'appel MCP"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requête JSON-RPC invalide"
+          },
+          "500": {
+            "description": "Erreur du proxy MCP"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {},
+  "parameters": {},
+  "responses": {},
+  "securityDefinitions": {},
+  "security": [],
+  "tags": [
+    {
+      "name": "Documentation",
+      "description": "Opérations de recherche dans la documentation"
+    },
+    {
+      "name": "MCP",
+      "description": "Opérations MCP (Model Context Protocol)"
+    },
+    {
+      "name": "Utility",
+      "description": "Utilitaires et diagnostics"
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+# Tests API REST pour MCP Proxy Microsoft Learn
+# Assurez-vous que votre serveur tourne sur http://localhost:3000
+
+### Variables
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+###############################################
+# 1. TEST HEALTH CHECK
+###############################################
+GET {{baseUrl}}/health
+
+###############################################
+# 2. TEST LISTE DES OUTILS MCP
+###############################################
+GET {{baseUrl}}/tools
+
+###############################################
+# 3. TEST RECHERCHE SIMPLE (Endpoint /search)
+###############################################
+POST {{baseUrl}}/search
+Content-Type: {{contentType}}
+
+{
+  "question": "How to create Azure Functions"
+}
+
+###############################################
+# 4. TEST RECHERCHE FRANÇAISE
+###############################################
+POST {{baseUrl}}/search
+Content-Type: {{contentType}}
+
+{
+  "question": "Comment déployer une application .NET sur Azure"
+}
+
+###############################################
+# 5. TEST PROXY MCP DIRECT - Liste des outils
+###############################################
+POST {{baseUrl}}/api/mcp
+Content-Type: {{contentType}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/list"
+}
+
+###############################################
+# 6. TEST PROXY MCP DIRECT - Recherche documentation
+###############################################
+POST {{baseUrl}}/api/mcp
+Content-Type: {{contentType}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 123,
+  "method": "tools/call",
+  "params": {
+    "name": "microsoft_docs_search",
+    "arguments": {
+      "question": "Azure Container Apps deployment"
+    }
+  }
+}
+
+###############################################
+# 7. TEST INITIALISATION MCP
+###############################################
+POST {{baseUrl}}/initialize
+Content-Type: {{contentType}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "roots": { "listChanged": true }
+    },
+    "clientInfo": {
+      "name": "VSCode-Test-Client",
+      "version": "1.0.0"
+    }
+  }
+}
+
+###############################################
+# 8. TEST RECHERCHE COMPLEXE
+###############################################
+POST {{baseUrl}}/api/mcp
+Content-Type: {{contentType}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 456,
+  "method": "tools/call",
+  "params": {
+    "name": "microsoft_docs_search",
+    "arguments": {
+      "question": "Azure Active Directory authentication best practices"
+    }
+  }
+}
+
+###############################################
+# 9. TEST RECHERCHE SPÉCIFIQUE POWERPLATFORM
+###############################################
+POST {{baseUrl}}/search
+Content-Type: {{contentType}}
+
+{
+  "question": "Power Apps custom connectors"
+}
+
+###############################################
+# 10. TEST AVEC ERREUR (question vide)
+###############################################
+POST {{baseUrl}}/search
+Content-Type: {{contentType}}
+
+{
+  "question": ""
+}
+
+###############################################
+# 11. TEST ENDPOINT INEXISTANT
+###############################################
+GET {{baseUrl}}/unknown-endpoint
+
+###############################################
+# 12. TEST RECHERCHE AI/ML
+###############################################
+POST {{baseUrl}}/api/mcp
+Content-Type: {{contentType}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 789,
+  "method": "tools/call",
+  "params": {
+    "name": "microsoft_docs_search",
+    "arguments": {
+      "question": "Azure Machine Learning model deployment"
+    }
+  }
+}
